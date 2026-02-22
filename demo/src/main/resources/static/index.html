@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>JWT Login Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        input { margin: 5px 0; padding: 5px; width: 100%; box-sizing: border-box; }
+        button { padding: 8px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 3px; }
+        button:hover { background-color: #0056b3; }
+        .result { background-color: #f4f4f4; padding: 10px; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>JWT 로그인 데모</h2>
+
+    <!-- 1. 회원가입 섹션 -->
+    <div class="section">
+        <h3>1. 회원가입</h3>
+        <input type="text" id="joinId" placeholder="아이디">
+        <input type="password" id="joinPw" placeholder="비밀번호">
+        <input type="text" id="joinName" placeholder="이름">
+        <label>
+            <input type="checkbox" id="isAdmin" style="width:auto;"> 관리자 계정으로 가입
+        </label>
+        <input type="text" id="adminToken" placeholder="관리자 토큰 (관리자 체크 시 입력)" style="display:none;">
+        <button onclick="join()">가입하기</button>
+    </div>
+
+    <!-- 2. 로그인 섹션 -->
+    <div class="section">
+        <h3>2. 로그인</h3>
+        <input type="text" id="loginId" placeholder="아이디">
+        <input type="password" id="loginPw" placeholder="비밀번호">
+        <button onclick="login()">로그인</button>
+        <button onclick="logout()" style="background-color: #6c757d;">로그아웃</button>
+        <div id="loginResult" class="result">로그인 상태: 대기중</div>
+    </div>
+
+    <!-- 3. API 테스트 섹션 -->
+    <div class="section">
+        <h3>3. API 테스트 (관리자 전용)</h3>
+        <p>로그인 후 받은 Access Token을 헤더에 담아 요청합니다.</p>
+        <button onclick="callAdminApi()">관리자 대시보드 조회</button>
+        <div id="apiResult" class="result">결과가 여기에 표시됩니다.</div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = 'http://localhost:8080';
+
+    // 관리자 체크박스 토글 시 토큰 입력창 표시
+    document.getElementById('isAdmin').addEventListener('change', function() {
+        document.getElementById('adminToken').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // 1. 회원가입 요청
+    async function join() {
+        const id = document.getElementById('joinId').value;
+        const password = document.getElementById('joinPw').value;
+        const name = document.getElementById('joinName').value;
+        const isAdmin = document.getElementById('isAdmin').checked;
+        const adminToken = document.getElementById('adminToken').value;
+
+        try {
+            const response = await fetch(`${BASE_URL}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    password: password,
+                    name: name,
+                    admin: isAdmin,
+                    adminToken: isAdmin ? adminToken : ""
+                })
+            });
+
+            const text = await response.text();
+            if (response.ok) {
+                alert('가입 성공: ' + text);
+            } else {
+                alert('가입 실패: ' + text); // 에러 메시지 출력
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('오류 발생');
+        }
+    }
+
+    // 2. 로그인 요청 및 토큰 저장
+    async function login() {
+        const id = document.getElementById('loginId').value;
+        const password = document.getElementById('loginPw').value;
+
+        try {
+            const response = await fetch(`/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, password: password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // ★ 핵심: 받은 토큰을 LocalStorage에 저장
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                
+                document.getElementById('loginResult').innerText = 
+                    `로그인 성공!\n\nAccess Token (앞부분): ${data.accessToken.substring(0, 20)}...`;
+            } else {
+                document.getElementById('loginResult').innerText = `로그인 실패: ${data.message || '오류'}`;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('loginResult').innerText = '서버 통신 오류';
+        }
+    }
+
+    // 로그아웃 (토큰 삭제)
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        document.getElementById('loginResult').innerText = '로그아웃 되었습니다.';
+        document.getElementById('apiResult').innerText = '';
+    }
+
+    // ---------------------------------------------------------
+    // ★ JWT Interceptor Logic (토큰 재발급 및 재요청)
+    // ---------------------------------------------------------
+
+    // 토큰 재발급 요청
+    async function refreshAccessToken() {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) return null;
+
+        try {
+            const response = await fetch(`${BASE_URL}/reissue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken: refreshToken })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                console.log('토큰 재발급 성공');
+                return data.accessToken;
+            }
+        } catch (e) {
+            console.error('토큰 재발급 요청 중 에러:', e);
+        }
+        return null;
+    }
+
+    // fetch 래퍼 함수 (Interceptor 역할)
+    async function authFetch(url, options = {}) {
+        // 1. 헤더에 Access Token 추가
+        const accessToken = localStorage.getItem('accessToken');
+        if (!options.headers) options.headers = {};
+        if (accessToken) {
+            options.headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        // 2. 원본 요청 시도
+        let response = await fetch(url, options);
+
+        // 3. 401(Unauthorized) 발생 시 토큰 재발급 시도
+        if (response.status === 401) {
+            console.log('Access Token 만료. 재발급 시도...');
+            const newAccessToken = await refreshAccessToken();
+
+            if (newAccessToken) {
+                // 재발급 성공 시 헤더 갱신 후 재요청
+                options.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                response = await fetch(url, options);
+            } else {
+                // 재발급 실패 시 로그아웃
+                alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                logout();
+            }
+        }
+        return response;
+    }
+
+    // 3. 보호된 API 호출 (Authorization 헤더 사용)
+    async function callAdminApi() {
+        if (!localStorage.getItem('accessToken')) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        try {
+            // authFetch를 사용하여 요청 (토큰 자동 주입 및 만료 시 재발급 처리)
+            const response = await authFetch(`${BASE_URL}/admin/dashboard`, {
+                method: 'GET'
+            });
+
+            if (response.ok) {
+                const text = await response.text();
+                document.getElementById('apiResult').innerText = `성공: ${text}`;
+            } else {
+                // 403 Forbidden 등 에러 처리
+                if (response.status === 403) {
+                    document.getElementById('apiResult').innerText = '실패: 권한이 없습니다 (관리자 계정만 가능)';
+                } else {
+                    const errorData = await response.json(); // JSON 에러 응답 파싱 시도
+                    document.getElementById('apiResult').innerText = `실패 (${response.status}): ${errorData.message || '오류'}`;
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('apiResult').innerText = 'API 호출 중 오류 발생';
+        }
+    }
+</script>
+</body>
+</html>

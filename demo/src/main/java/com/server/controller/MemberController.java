@@ -76,11 +76,13 @@ public class MemberController {
                 .collect(Collectors.toList()));
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
 
+        //  Refresh Token은 서버의 데이터베이스에 저장
         refreshTokenRepository.save(RefreshToken.builder()
                 .userId(member.getId())
                 .refreshToken(refreshToken)
                 .build());
 
+        // 메시지 컨버터(Jackson)에 의해 JSON 형식으로 변환되어 요청을 보낸 클라이언트(웹 브라우저, 모바일 앱 등)에게 전송.
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
 
@@ -154,7 +156,7 @@ public class MemberController {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-        // 3. Refresh Token 삭제 (존재할 경우에만)
+        // 3. Refresh Token 삭제 (존재할 경우에만
         refreshTokenRepository.findById(id).ifPresent(refreshTokenRepository::delete);
 
         // 4. 회원 삭제
