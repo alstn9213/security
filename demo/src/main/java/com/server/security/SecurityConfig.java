@@ -38,10 +38,13 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 적용
             .csrf(csrf -> csrf.disable()) // JWT를 사용하는 Stateless 환경이므로 CSRF 보호 비활성화
+            .formLogin(form -> form.disable()) // 기본 로그인 페이지 비활성화
+            .httpBasic(basic -> basic.disable()) // HTTP Basic 인증 비활성화
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안함
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/login", "/join", "/reissue").permitAll() // 로그인, 회원가입, 재발급 경로는 누구나 접근 가능
-                .requestMatchers("/admin/**").hasRole(Role.ADMIN.getValue()) // 관리자만 접근 가능
+                .requestMatchers("/api/payments/webhook").permitAll() // 결제 웹훅은 PG사에서 호출하므로 인증 제외
+                .requestMatchers("/admin/**").hasAuthority(Role.ADMIN.getValue()) // 관리자만 접근 가능
                 .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)

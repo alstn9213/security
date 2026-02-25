@@ -3,8 +3,8 @@ package com.server.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
+@AllArgsConstructor
 public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
 }

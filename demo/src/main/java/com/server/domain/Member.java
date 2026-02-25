@@ -5,8 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -22,7 +20,6 @@ import java.util.List;
 public class Member extends BaseTimeEntity {
   
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private String id; // Username 역할
 
   private String password;
