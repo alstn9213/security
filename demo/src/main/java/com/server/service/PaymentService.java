@@ -11,6 +11,7 @@ import com.server.exception.ErrorCode;
 import com.server.repository.OrderRepository;
 import com.server.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -103,6 +105,7 @@ public class PaymentService {
                     responseNode.path("status").asText()
             );
         } catch (Exception e) {
+            log.error("아임포트 결제 조회 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.IAMPORT_ERROR);
         }
     }
@@ -117,6 +120,7 @@ public class PaymentService {
             ResponseEntity<String> response = restTemplate.postForEntity("https://api.iamport.kr/users/getToken", new HttpEntity<>(body, headers), String.class);
             return objectMapper.readTree(response.getBody()).path("response").path("access_token").asText();
         } catch (Exception e) {
+            log.error("아임포트 토큰 발급 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.IAMPORT_ERROR);
         }
     }
@@ -135,6 +139,7 @@ public class PaymentService {
 
             restTemplate.postForEntity("https://api.iamport.kr/payments/cancel", entity, String.class);
         } catch (Exception e) {
+            log.error("아임포트 결제 취소 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.IAMPORT_ERROR);
         }
     }
