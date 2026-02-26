@@ -31,14 +31,19 @@ public class Order extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id")
+    private Item item;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     @Builder
-    public Order(Long price, String itemName, Member member) {
-        this.price = price;
-        this.itemName = itemName;
+    public Order(Member member, Item item) {
         this.member = member;
+        this.item = item;
+        this.price = (long) item.getPrice();
+        this.itemName = item.getName();
         this.orderUid = UUID.randomUUID().toString();
         this.status = OrderStatus.READY;
     }

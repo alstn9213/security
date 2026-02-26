@@ -39,3 +39,4 @@ out/
 ### Spring Boot Secrets ###
 application.yml
 application-*.yml
+application-secret.properties

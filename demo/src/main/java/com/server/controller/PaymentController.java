@@ -23,4 +23,10 @@ public class PaymentController {
         paymentService.paymentByCallback(request);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<String> cancelPayment(@RequestBody PaymentCallbackRequest request) {
+        paymentService.refund(request);
+        return ResponseEntity.ok("결제가 취소되었습니다.");
+    }
 }

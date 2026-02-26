@@ -1,11 +1,13 @@
 package com.server.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 import com.server.domain.Order;
 import com.server.domain.OrderStatus;
 import com.server.domain.Payment;
 import com.server.dto.PaymentCallbackRequest;
+import com.server.dto.IamportPaymentInfo;
 import com.server.exception.CustomException;
 import com.server.exception.ErrorCode;
 import com.server.repository.OrderRepository;
@@ -40,6 +42,8 @@ public class PaymentService {
 
     @Value("${iamport.api.secret}")
     private String apiSecret;
+
+    private String iamportApiUrl = "https://api.iamport.kr";
 
     public void paymentByCallback(PaymentCallbackRequest request) {
         // 1. 주문 조회
@@ -82,6 +86,16 @@ public class PaymentService {
         order.changeStatus(OrderStatus.PAID);
     }
 
+    public void refund(PaymentCallbackRequest request) {
+        Order order = orderRepository.findByOrderUid(request.getOrderUid())
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        // 아임포트 결제 취소
+        cancelPayment(request.getPaymentUid());
+
+        order.changeStatus(OrderStatus.CANCELLED);
+    }
+
     // 아임포트 API 호출: 결제 정보 조회
     private IamportPaymentInfo getPaymentInfo(String impUid) {
         String accessToken = getAccessToken();
@@ -91,7 +105,7 @@ public class PaymentService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                "https://api.iamport.kr/payments/" + impUid,
+                iamportApiUrl + "/payments/" + impUid,
                 HttpMethod.GET,
                 entity,
                 String.class
@@ -102,7 +116,7 @@ public class PaymentService {
             JsonNode responseNode = root.path("response");
             return new IamportPaymentInfo(
                     responseNode.path("amount").asLong(),
-                    responseNode.path("status").asText()
+                    responseNode.path("status").asString()
             );
         } catch (Exception e) {
             log.error("아임포트 결제 조회 실패: {}", e.getMessage());
@@ -117,8 +131,8 @@ public class PaymentService {
         Map<String, String> body = Map.of("imp_key", apiKey, "imp_secret", apiSecret);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity("https://api.iamport.kr/users/getToken", new HttpEntity<>(body, headers), String.class);
-            return objectMapper.readTree(response.getBody()).path("response").path("access_token").asText();
+            ResponseEntity<String> response = restTemplate.postForEntity(iamportApiUrl + "/users/getToken", new HttpEntity<>(body, headers), String.class);
+            return objectMapper.readTree(response.getBody()).path("response").path("access_token").asString();
         } catch (Exception e) {
             log.error("아임포트 토큰 발급 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.IAMPORT_ERROR);
@@ -137,13 +151,10 @@ public class PaymentService {
             Map<String, String> body = Map.of("imp_uid", impUid);
             HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
-            restTemplate.postForEntity("https://api.iamport.kr/payments/cancel", entity, String.class);
+            restTemplate.postForEntity(iamportApiUrl + "/payments/cancel", entity, String.class);
         } catch (Exception e) {
             log.error("아임포트 결제 취소 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.IAMPORT_ERROR);
         }
     }
-
-    @lombok.Data @lombok.AllArgsConstructor
-    private static class IamportPaymentInfo { private Long amount; private String status; }
 }
