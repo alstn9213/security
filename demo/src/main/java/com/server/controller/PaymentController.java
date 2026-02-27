@@ -18,7 +18,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/webhook")
+    @PostMapping("/complete")
     public ResponseEntity<String> validationPayment(@RequestBody PaymentCallbackRequest request) {
         paymentService.paymentByCallback(request);
         return ResponseEntity.ok().build();

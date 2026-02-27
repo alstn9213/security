@@ -1,0 +1,7 @@
+body { font-family: sans-serif; padding: 20px; }
+.container { max-width: 600px; margin: 0 auto; }
+.section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+input { margin: 5px 0; padding: 5px; width: 100%; box-sizing: border-box; }
+button { padding: 8px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 3px; }
+button:hover { background-color: #0056b3; }
+.result { background-color: #f4f4f4; padding: 10px; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }

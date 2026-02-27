@@ -5,6 +5,8 @@ import com.server.dto.LoginRequest;
 import com.server.dto.MemberUpdateRequest;
 import com.server.dto.TokenRequest;
 import com.server.service.MemberService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,9 +27,12 @@ public class MemberController {
 
     // 회원가입 메서드
     @PostMapping("/join")
-    public String join(@RequestBody JoinRequest joinRequest) {
+    public ResponseEntity<String> join(@RequestBody @Valid JoinRequest joinRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(bindingResult.getFieldError().getDefaultMessage());
+        }
         memberService.join(joinRequest);
-        return "회원가입 완료";
+        return ResponseEntity.ok("회원가입 완료");
     }
 
     // 로그인 메서드
