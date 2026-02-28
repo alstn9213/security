@@ -6,7 +6,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    withCredentials: true // CORS 쿠키 전송 필요 시
+    withCredentials: false // CORS 쿠키 전송 필요 시
 });
 
 // [요청 인터셉터] 모든 요청 전에 실행
@@ -31,7 +31,15 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         console.error('API Error:', error.response ? error.response.data : error.message);
-        // 401 에러(인증 실패) 시 로그인 페이지로 리다이렉트하거나 로그아웃 처리하는 로직을 추가할 수 있습니다.
+        
+        // 401 에러(인증 실패/토큰 만료) 발생 시 처리
+        if (error.response && error.response.status === 401) {
+            if (localStorage.getItem('accessToken')) {
+                localStorage.removeItem('accessToken'); // 만료된 토큰 삭제
+                alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
+                window.location.reload(); // 페이지 새로고침
+            }
+        }
         return Promise.reject(error);
     }
 );

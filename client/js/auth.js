@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminToken = document.getElementById('adminToken').value;
 
         const data = {
-            username: id,
+            id: id, // 서버 DTO의 필드명 'id'와 일치시켜야 함
             password: pw,
             name: name,
-            role: isAdmin ? 'ADMIN' : 'USER',
+            admin: isAdmin, // 서버 DTO의 필드명 'admin'(boolean)과 일치시켜야 함
             adminToken: isAdmin ? adminToken : null
         };
 
@@ -42,14 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const pw = document.getElementById('loginPw').value;
 
         try {
-            const response = await api.post('/login', { username: id, password: pw });
+            const response = await api.post('/login', { id: id, password: pw });
             
             // 백엔드에서 헤더나 바디로 토큰을 줍니다. (여기서는 Authorization 헤더 가정)
-            // 보통 Bearer {token} 형태이므로 분리해서 저장하거나 그대로 저장
+            // 1. 헤더 확인
             const authHeader = response.headers['authorization'];
-            const accessToken = authHeader && authHeader.startsWith('Bearer ') 
-                                ? authHeader.substring(7) 
-                                : authHeader;
+            let accessToken = authHeader && authHeader.startsWith('Bearer ') 
+                                ? authHeader.substring(7) : authHeader;
+
+            // 2. 바디 확인 (헤더에 없으면 바디의 accessToken 필드 확인)
+            if (!accessToken && response.data && response.data.accessToken) {
+                accessToken = response.data.accessToken;
+            }
 
             if (accessToken) {
                 localStorage.setItem('accessToken', accessToken);
@@ -62,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('로그인 에러:', error); // 콘솔에 에러 상세 내용 출력
             loginResult.textContent = '로그인 상태: 실패';
             loginResult.style.color = 'red';
-            alert('로그인 실패: ' + (error.response?.data?.message || '아이디/비번 확인 필요'));
             alert('로그인 실패: ' + (error.response?.data?.message || error.message || '아이디/비번 확인 필요'));
         }
     });

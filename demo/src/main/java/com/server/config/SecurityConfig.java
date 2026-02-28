@@ -1,4 +1,4 @@
-package com.server.security;
+package com.server.config;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +20,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.server.domain.Role;
+import com.server.security.JwtAuthenticationFilter;
+import com.server.security.JwtExceptionFilter;
+import com.server.security.JwtTokenProvider;
 
 @Configuration
 @RequiredArgsConstructor
@@ -45,7 +48,7 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable()) // HTTP Basic 인증 비활성화
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안함
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/login", "/join", "/reissue", "/error").permitAll() // 로그인, 회원가입, 재발급 경로는 누구나 접근 가능
+                .requestMatchers("/", "/index.html", "/login", "/join", "/reissue", "/error", "/api/items").permitAll() // 로그인, 회원가입, 재발급, 상품 목록은 누구나 접근 가능
                 .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll() // 정적 리소스 허용
                 .requestMatchers("/api/payments/webhook").permitAll() // 결제 웹훅은 PG사에서 호출하므로 인증 제외
                 .requestMatchers("/admin/**").hasAuthority(Role.ADMIN.getValue()) // 관리자만 접근 가능
@@ -70,6 +73,8 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // 모든 헤더 허용
         configuration.setAllowedHeaders(List.of("*"));
+        // 클라이언트가 응답 헤더 중 Authorization을 읽을 수 있도록 허용
+        configuration.setExposedHeaders(List.of("Authorization"));
         // 자격 증명(쿠키 등) 허용
         configuration.setAllowCredentials(true);
 
