@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입 - Demo Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/api.js" defer></script>
+    <script src="js/auth.js" defer></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <a href="index.html">Demo Shop</a>
+    </div>
+</nav>
+
+<div class="container auth-wrapper">
+    <div class="auth-card">
+        <h2>회원가입</h2>
+        <div class="form-group">
+            <input type="text" id="joinId" placeholder="아이디" required>
+        </div>
+        <div class="form-group">
+            <input type="password" id="joinPw" placeholder="비밀번호" required>
+        </div>
+        <div class="form-group">
+            <input type="text" id="joinName" placeholder="이름" required>
+        </div>
+        
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="isAdmin" style="width: auto;">
+            <label for="isAdmin">관리자 계정으로 가입</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="text" id="adminToken" placeholder="관리자 토큰" style="display:none;">
+        </div>
+
+        <button id="joinBtn" class="btn-primary">가입하기</button>
+        
+        <div class="auth-links">
+            이미 계정이 있으신가요? <a href="login.html">로그인</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

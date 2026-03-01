@@ -2,58 +2,39 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>JWT Login Demo</title>
+    <title>Demo Shop</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="js/api.js" defer></script>
     <script src="js/auth.js" defer></script>
-    <script src="js/admin.js" defer></script>
     <script src="js/payment.js" defer></script>
 </head>
 <body>
+
+<!-- 네비게이션 바 -->
+<nav class="navbar">
+    <div class="logo">
+        <a href="index.html">Demo Shop</a>
+    </div>
+    <div class="nav-links">
+        <a href="login.html" id="nav-login">로그인</a>
+        <a href="join.html" id="nav-join">회원가입</a>
+        <a href="#" id="nav-logout" style="display:none;">로그아웃</a>
+    </div>
+</nav>
+
 <div class="container">
-    <h2>JWT 로그인 데모</h2>
-
-    <!-- 1. 회원가입 섹션 -->
-    <div class="section">
-        <h3>1. 회원가입</h3>
-        <input type="text" id="joinId" placeholder="아이디">
-        <input type="password" id="joinPw" placeholder="비밀번호">
-        <input type="text" id="joinName" placeholder="이름">
-        <label>
-            <input type="checkbox" id="isAdmin" style="width:auto;"> 관리자 계정으로 가입
-        </label>
-        <input type="text" id="adminToken" placeholder="관리자 토큰 (관리자 체크 시 입력)" style="display:none;">
-        <button id="joinBtn">가입하기</button>
+    <!-- 헤더 섹션 -->
+    <div style="text-align: center; margin: 3rem 0;">
+        <h1>환영합니다!</h1>
+        <p>최고의 상품을 만나보세요.</p>
     </div>
 
-    <!-- 2. 로그인 섹션 -->
-    <div class="section">
-        <h3>2. 로그인</h3>
-        <input type="text" id="loginId" placeholder="아이디">
-        <input type="password" id="loginPw" placeholder="비밀번호">
-        <button id="loginBtn">로그인</button>
-        <button id="logoutBtn" style="background-color: #6c757d;">로그아웃</button>
-        <div id="loginResult" class="result">로그인 상태: 대기중</div>
-    </div>
-
-    <!-- 3. API 테스트 섹션 -->
-    <div class="section">
-        <h3>3. API 테스트 (관리자 전용)</h3>
-        <p>로그인 후 받은 Access Token을 헤더에 담아 요청합니다.</p>
-        <button id="adminApiBtn">관리자 대시보드 조회</button>
-        <div id="apiResult" class="result">결과가 여기에 표시됩니다.</div>
-    </div>
-
-    <!-- 4. 상품 구매 섹션 -->
-    <div class="section">
-        <h3>4. 상품 구매 (Iamport 결제)</h3>
-        <div id="productList" class="product-list" style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <!-- 자바스크립트로 상품 목록이 여기에 로드됩니다 -->
-            <p>상품 목록을 불러오는 중...</p>
-        </div>
-        <div id="paymentResult" class="result">결제 대기중...</div>
+    <!-- 상품 목록 섹션 -->
+    <div id="productList" class="product-grid">
+        <!-- 자바스크립트로 상품 목록이 여기에 로드됩니다 -->
+        <p>상품 목록을 불러오는 중...</p>
     </div>
 </div>
 

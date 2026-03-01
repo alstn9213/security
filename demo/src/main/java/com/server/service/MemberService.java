@@ -32,6 +32,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
+
     // 관리자 가입을 위한 전용 토큰 (실무에서는 application.yml 등에서 관리 권장)
     private static final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
@@ -74,7 +75,7 @@ public class MemberService {
                 .refreshToken(refreshToken)
                 .build());
 
-        return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
+        return Map.of("accessToken", accessToken, "refreshToken", refreshToken, "name", member.getName());
     }
 
     public Map<String, String> reissue(TokenRequest tokenRequest) {

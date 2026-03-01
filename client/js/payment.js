@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     window.IMP.init("imp18800351"); 
 
-    const paymentResult = document.getElementById('paymentResult');
     const productList = document.getElementById('productList');
 
     // 1. 상품 목록 불러오기 함수
@@ -19,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.innerHTML = `
                     <h4>${item.name}</h4>
                     <p>가격: ${item.price.toLocaleString()}원</p>
-                    <button class="order-btn" data-id="${item.id}" style="width: 100%; background-color: #28a745; color: white; border: none; padding: 8px; cursor: pointer;">구매하기</button>
+                    <button class="order-btn" data-id="${item.id}" data-name="${item.name}" style="width: 100%; background-color: #28a745; color: white; border: none; padding: 8px; cursor: pointer;">구매하기</button>
                 `;
                 productList.appendChild(card);
             });
@@ -43,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const itemId = e.target.getAttribute('data-id');
+        const itemName = e.target.getAttribute('data-name');
         
         let merchantUid = '';
         let orderAmount = 0;
@@ -65,33 +65,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. 결제 요청
         IMP.request_pay({
-            pg: "html5_inicis", // 'inicis'는 구형(ActiveX)일 수 있음. 웹표준은 'html5_inicis' 권장
+            pg: "html5_inicis",
             pay_method: "card",
             merchant_uid: merchantUid,
-            name: "상품 ID " + itemId,
+            name: itemName,
             amount: orderAmount,
             buyer_email: buyerEmail,
             buyer_name: buyerName,
             buyer_tel: buyerTel,
-        }, async function (rsp) {
+        }, async (rsp) => {
             if (rsp.success) {
-                paymentResult.textContent = '결제 성공! 서버 검증 중...';
                 try {
                     await api.post('/api/payments/complete', {
                         paymentUid: rsp.imp_uid,
                         orderUid: rsp.merchant_uid
                     });
-                    paymentResult.textContent = '결제 및 검증 완료!';
-                    paymentResult.style.color = 'blue';
                     alert('결제가 정상적으로 완료되었습니다.');
                 } catch (error) {
-                    paymentResult.textContent = '결제 검증 실패 (위변조 위험)';
-                    paymentResult.style.color = 'red';
                     console.error(error);
+                    alert('결제 검증 실패: ' + (error.response?.data?.message || error.message));
                 }
             } else {
-                paymentResult.textContent = '결제 실패: ' + rsp.error_msg;
-                paymentResult.style.color = 'red';
+                alert(`결제에 실패하였습니다. 에러 내용: ${rsp.error_msg}`);
             }
         });
     });

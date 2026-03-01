@@ -21,7 +21,7 @@ public class PaymentController {
     @PostMapping("/complete")
     public ResponseEntity<String> validationPayment(@RequestBody PaymentCallbackRequest request) {
         paymentService.paymentByCallback(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("결제 검증 및 저장 완료");
     }
 
     @PostMapping("/cancel")
