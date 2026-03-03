@@ -68,7 +68,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // 실무 설정: 프론트엔드 도메인(로컬, 운영 서버)만 명시적으로 허용
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", "https://www.mydomain.com"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5500", "http://127.0.0.1:5500"));
         // 허용할 HTTP 메서드 지정 (불필요한 메서드 차단)
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // 모든 헤더 허용
